@@ -5,7 +5,7 @@ import LogoutButton from './LogoutButton';
 
 export default async function Header() {
   // THAY ĐỔI: Không cần truyền cookies() vào nữa
-  const supabase = createClient(); 
+  const supabase = createClient();
 
   const {
     data: { session },
