@@ -2,20 +2,18 @@ import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '@/features/auth/context/AuthContext';
-import type { UserRole } from '@/types';
+import type { UserProfile } from '@/types';
 
 type FormState = {
   fullName: string;
   email: string;
   password: string;
-  role: UserRole;
 };
 
 const createDefaultState = (): FormState => ({
   fullName: '',
   email: '',
   password: '',
-  role: 'student',
 });
 
 export const AuthPage: React.FC = () => {
@@ -26,6 +24,13 @@ export const AuthPage: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const resolveDestination = (userProfile: UserProfile | null | undefined) => {
+    if (!userProfile) return '/';
+    if (userProfile.role === 'teacher') return '/teacher';
+    if (userProfile.role === 'student') return '/student';
+    return '/';
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
@@ -33,16 +38,16 @@ export const AuthPage: React.FC = () => {
 
     try {
       if (mode === 'login') {
-        await login(form.email, form.password);
-        navigate('/');
+        const profile = await login(form.email, form.password);
+        navigate(resolveDestination(profile), { replace: true });
       } else {
-       const outcome = await register(form.fullName, form.email, form.password, form.role);
-       setMessage(
-         outcome === 'created'
-           ? 'Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.'
-           : 'Tài khoản đã tồn tại nhưng chưa xác nhận. Email xác nhận đã được gửi lại.',
-       );
-       setMode('login');
+        const outcome = await register(form.fullName, form.email, form.password, 'student');
+        setMessage(
+          outcome === 'created'
+            ? 'Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.'
+            : 'Tài khoản đã tồn tại nhưng chưa xác nhận. Email xác nhận đã được gửi lại.',
+        );
+        setMode('login');
         setForm(createDefaultState());
       }
     } catch (error) {
@@ -148,28 +153,6 @@ export const AuthPage: React.FC = () => {
               />
             </div>
 
-            {mode === 'register' && (
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-600">Vai trò</label>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  {(['teacher', 'student'] as UserRole[]).map((role) => (
-                    <button
-                      key={role}
-                      type="button"
-                      onClick={() => setForm((prev) => ({ ...prev, role }))}
-                      className={`rounded-lg border px-3 py-2 capitalize transition ${
-                        form.role === role
-                          ? 'border-indigo-500 bg-indigo-50 text-indigo-600'
-                          : 'border-slate-200 text-slate-500 hover:border-indigo-200 hover:text-indigo-600'
-                      }`}
-                    >
-                      {role === 'teacher' ? 'Giáo viên' : 'Học sinh'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <button
               type="submit"
               disabled={loading}
@@ -180,6 +163,11 @@ export const AuthPage: React.FC = () => {
           </form>
 
           {message && <p className="mt-4 text-sm text-indigo-600">{message}</p>}
+          {mode === 'register' && (
+            <p className="mt-3 text-xs text-slate-500">
+              Vai trò tài khoản sẽ được quản trị viên chỉ định sau khi đăng ký.
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -24,7 +24,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowRoles, redi
   }
 
   if (allowRoles && profile && !allowRoles.includes(profile.role)) {
-    return <Navigate to="/" replace />;
+    const fallback = profile.role === 'teacher' ? '/teacher' : profile.role === 'student' ? '/student' : '/';
+    return <Navigate to={fallback} replace />;
   }
 
   return <Outlet />;
