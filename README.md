@@ -1,20 +1,68 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# QuizLab
 
-# Run and deploy your AI Studio app
+QuizLab là nền tảng thi trực tuyến cho phép giáo viên tạo lớp học, giao bài thi trắc nghiệm & tự luận và theo dõi bài nộp của học sinh. Điểm nhấn của ứng dụng là phòng chờ với đồng hồ đếm ngược tự động chuyển hướng sang trang làm bài khi đến giờ.
 
-This contains everything you need to run your app locally.
+## Kiến trúc dự án
 
-View your app in AI Studio: https://ai.studio/apps/drive/1mPLAz1S3d9w_SwjskBpADl1eXn9SOzA0
+```
+src/
+ ├─ app/            # Router, layout và shell của ứng dụng
+ ├─ features/       # Các nhóm chức năng (auth, student, teacher, tests)
+ ├─ hooks/          # Hooks dùng chung (ví dụ: useCountdown)
+ ├─ lib/            # Kết nối Supabase và helper chia sẻ
+ ├─ services/       # Lớp gọi API Supabase theo domain
+ ├─ styles/         # TailwindCSS entry point
+ └─ types/          # Định nghĩa kiểu dữ liệu chia sẻ
+```
 
-## Run Locally
+Ứng dụng sử dụng React + TypeScript, Vite cho bundler, TailwindCSS cho giao diện và Supabase để xác thực & lưu trữ dữ liệu thời gian thực.
 
-**Prerequisites:**  Node.js
+## Thiết lập môi trường
 
+1. Cài đặt dependencies
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   ```bash
+   npm install
+   ```
+
+2. Tạo file `.env.local` với các biến Supabase
+
+   ```bash
+   VITE_SUPABASE_URL=...
+   VITE_SUPABASE_ANON_KEY=...
+   ```
+
+3. Chạy ứng dụng ở môi trường phát triển
+
+   ```bash
+   npm run dev
+   ```
+
+4. Build bản sản xuất
+
+   ```bash
+   npm run build
+   ```
+
+> ⚠️ Lưu ý: Build yêu cầu đã cài đặt `tailwindcss`, `postcss` và `autoprefixer` (được khai báo trong `package.json`). Hãy chắc chắn đã chạy `npm install` trước khi build.
+
+## Các route chính
+
+| Đường dẫn             | Mô tả                                                     |
+|-----------------------|-----------------------------------------------------------|
+| `/`                   | Landing page (khách) hoặc dashboard của học sinh          |
+| `/login`              | Trang đăng nhập/đăng ký                                   |
+| `/teacher`            | Bảng điều khiển giáo viên (route được bảo vệ)            |
+| `/student`            | Dashboard học sinh (route được bảo vệ)                   |
+| `/test/:testId`       | Phòng chờ với đồng hồ đếm ngược                           |
+| `/test/:testId/take`  | Trang làm bài thi với đồng hồ thời gian làm bài          |
+
+## Scripts
+
+- `npm run dev` – chạy Vite dev server
+- `npm run build` – build sản phẩm
+- `npm run preview` – chạy thử bản build
+
+## Giấy phép
+
+Dự án được phát hành theo giấy phép MIT.
