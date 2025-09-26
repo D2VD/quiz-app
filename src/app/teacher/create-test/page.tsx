@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import CreateTestForm from './CreateTestForm';
 
 async function getClasses(userId: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('classes')
     .select('id, name')
@@ -18,7 +18,7 @@ async function getClasses(userId: string) {
 }
 
 export default async function CreateTestPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session) {
