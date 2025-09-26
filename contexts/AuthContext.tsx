@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { UserProfile } from '../types';
+import { RegistrationOutcome, UserProfile } from '../types';
 import { UserRole } from '../constants';
 import { api } from '../services/api';
 import { supabase } from '../services/supabaseClient';
@@ -10,7 +10,12 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => void;
-  register: (fullName: string, email: string, password: string, role: UserRole) => Promise<void>;
+  register: (
+    fullName: string,
+    email: string,
+    password: string,
+    role: UserRole
+  ) => Promise<RegistrationOutcome>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,20 +61,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const register = async (fullName: string, email: string, password: string, role: UserRole) => {
+  const register = async (
+    fullName: string,
+    email: string,
+    password: string,
+    role: UserRole
+  ) => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            role,
-          }
-        }
-      });
-      if (error) throw error;
+      return await api.register(fullName, email, password, role);
     } catch (error) {
       console.error(error);
       throw error;

@@ -1,4 +1,13 @@
-import { UserProfile, Class, Test, Submission, Question, QuestionType, Option } from '../types';
+import {
+  UserProfile,
+  Class,
+  Test,
+  Submission,
+  Question,
+  QuestionType,
+  Option,
+  RegistrationOutcome,
+} from '../types';
 import { UserRole } from '../constants';
 import { GoogleGenAI, Type } from "@google/genai";
 import { supabase } from './supabaseClient';
@@ -21,11 +30,21 @@ const generateQuestions = async (topic: string, numQuestions: number, questionTy
 
 export const api = {
   // --- User & Auth ---
-  register: async (fullName: string, email: string, pass: string, role: UserRole): Promise<void> => {
-    const { error } = await supabase.auth.signUp({
+  register: async (
+    fullName: string,
+    email: string,
+    pass: string,
+    role: UserRole
+  ): Promise<RegistrationOutcome> => {
+    const emailRedirectTo = typeof window !== 'undefined'
+      ? `${window.location.origin}/login`
+      : undefined;
+
+    const { data, error } = await supabase.auth.signUp({
       email,
       password: pass,
       options: {
+        emailRedirectTo,
         data: {
           full_name: fullName,
           role,
@@ -33,6 +52,27 @@ export const api = {
       }
     });
     if (error) throw error;
+    if (!data?.user) {
+      throw new Error('Không thể tạo tài khoản. Vui lòng thử lại sau.');
+    }
+
+    const identities = data.user.identities ?? [];
+
+    // Supabase returns an empty identities array when the email already exists but
+    // has not been confirmed yet. Trigger a resend so the user actually receives it.
+    if (identities.length === 0) {
+      const { error: resendError } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo },
+      });
+      if (resendError) {
+        throw new Error(resendError.message || 'Không thể gửi lại email xác nhận.');
+      }
+      return 'resent';
+    }
+
+    return 'created';
   },
   
   login: async (email: string, pass: string): Promise<void> => {
