@@ -1,6 +1,8 @@
 import { UserRole } from './constants';
 import { User } from '@supabase/supabase-js';
 
+export type RegistrationOutcome = 'created' | 'resent';
+
 export interface UserProfile extends User {
   role: UserRole;
   fullName: string;

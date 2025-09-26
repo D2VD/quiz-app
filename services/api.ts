@@ -1,4 +1,13 @@
-import { UserProfile, Class, Test, Submission, Question, QuestionType, Option } from '../types';
+import {
+  UserProfile,
+  Class,
+  Test,
+  Submission,
+  Question,
+  QuestionType,
+  Option,
+  RegistrationOutcome,
+} from '../types';
 import { UserRole } from '../constants';
 import { GoogleGenAI, Type } from "@google/genai";
 import { supabase } from './supabaseClient';
@@ -21,7 +30,7 @@ const generateQuestions = async (topic: string, numQuestions: number, questionTy
 
 export const api = {
   // --- User & Auth ---
-  register: async (fullName: string, email: string, pass: string, role: UserRole): Promise<void> => {
+
     const emailRedirectTo = typeof window !== 'undefined'
       ? `${window.location.origin}/login`
       : undefined;
@@ -41,6 +50,7 @@ export const api = {
     if (!data?.user) {
       throw new Error('Không thể tạo tài khoản. Vui lòng thử lại sau.');
     }
+
   },
   
   login: async (email: string, pass: string): Promise<void> => {

@@ -30,8 +30,12 @@ const Register: React.FC = () => {
 
     setLoading(true);
     try {
-      await register(fullName, email, password, role);
-      setSuccess('Đăng ký thành công! Vui lòng kiểm tra email của bạn để xác nhận tài khoản trước khi đăng nhập.');
+      const result = await register(fullName, email, password, role);
+      if (result === 'resent') {
+        setSuccess('Tài khoản này đã được đăng ký trước đó nhưng chưa được xác nhận. Chúng tôi vừa gửi lại email xác nhận, vui lòng kiểm tra hộp thư của bạn.');
+      } else {
+        setSuccess('Đăng ký thành công! Vui lòng kiểm tra email của bạn để xác nhận tài khoản trước khi đăng nhập.');
+      }
     } catch (err: any) {
       setError(err.message || 'Đăng ký thất bại. Vui lòng thử lại.');
     } finally {
