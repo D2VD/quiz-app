@@ -1,11 +1,10 @@
 // src/app/teacher/page.tsx
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 export default async function TeacherDashboard() {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -45,7 +44,15 @@ export default async function TeacherDashboard() {
         </div>
       </div>
 
-      {/* Phần quản lý đề thi sẽ được thêm ở đây */}
+      {/* Phần quản lý đề thi */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-semibold">Đề thi</h2>
+          <Link href="/teacher/create-test" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+            Tạo đề thi mới
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
