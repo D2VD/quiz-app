@@ -69,7 +69,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   ) => {
     setLoading(true);
     try {
-      return await api.register(fullName, email, password, role);
+
     } catch (error) {
       console.error(error);
       throw error;

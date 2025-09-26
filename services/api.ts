@@ -30,12 +30,7 @@ const generateQuestions = async (topic: string, numQuestions: number, questionTy
 
 export const api = {
   // --- User & Auth ---
-  register: async (
-    fullName: string,
-    email: string,
-    pass: string,
-    role: UserRole
-  ): Promise<RegistrationOutcome> => {
+
     const emailRedirectTo = typeof window !== 'undefined'
       ? `${window.location.origin}/login`
       : undefined;
@@ -56,23 +51,6 @@ export const api = {
       throw new Error('Không thể tạo tài khoản. Vui lòng thử lại sau.');
     }
 
-    const identities = data.user.identities ?? [];
-
-    // Supabase returns an empty identities array when the email already exists but
-    // has not been confirmed yet. Trigger a resend so the user actually receives it.
-    if (identities.length === 0) {
-      const { error: resendError } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-        options: { emailRedirectTo },
-      });
-      if (resendError) {
-        throw new Error(resendError.message || 'Không thể gửi lại email xác nhận.');
-      }
-      return 'resent';
-    }
-
-    return 'created';
   },
   
   login: async (email: string, pass: string): Promise<void> => {
