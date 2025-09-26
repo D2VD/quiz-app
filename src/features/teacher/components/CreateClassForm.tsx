@@ -16,12 +16,27 @@ export const CreateClassForm: React.FC<Props> = ({ onCreated }) => {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!profile) return;
+    const sanitizedName = name.trim();
+
+    if (!profile?.id) {
+      setError('Không xác định được tài khoản giáo viên. Vui lòng đăng nhập lại.');
+      return;
+    }
+
+    if (profile.role !== 'teacher') {
+      setError('Chỉ giáo viên mới được phép tạo lớp học.');
+      return;
+    }
+
+    if (!sanitizedName) {
+      setError('Tên lớp học không được để trống.');
+      return;
+    }
 
     setLoading(true);
     setError(null);
     try {
-      const klass = await ClassApi.createClass(name, profile.id);
+      const klass = await ClassApi.createClass(sanitizedName, profile.id);
       setName('');
       onCreated(klass);
     } catch (err) {

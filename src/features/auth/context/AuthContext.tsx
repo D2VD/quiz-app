@@ -17,7 +17,7 @@ interface AuthContextValue {
   profile: UserProfile | null;
   loading: boolean;
   register: (fullName: string, email: string, password: string, role: UserRole) => Promise<RegistrationOutcome>;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<UserProfile | null>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -28,14 +28,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const sessionUserId = session?.user?.id ?? null;
 
-  const hydrateProfile = useCallback(
-    async (userId: string) => {
-      const loadedProfile = await AuthApi.fetchProfile(userId);
-      setProfile(loadedProfile);
-    },
-    [],
-  );
+  const hydrateProfile = useCallback(async (userId: string) => {
+    const loadedProfile = await AuthApi.fetchProfile(userId);
+    setProfile(loadedProfile);
+    return loadedProfile;
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -77,15 +76,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [],
   );
 
-  const handleLogin = useCallback(async (email: string, password: string) => {
-    await AuthApi.login(email, password);
-    const { data } = await supabase.auth.getSession();
-    setSession(data.session);
-    const userId = data.session?.user.id;
-    if (userId) {
-      await hydrateProfile(userId);
-    }
-  }, [hydrateProfile]);
+  const handleLogin = useCallback(
+    async (email: string, password: string) => {
+      await AuthApi.login(email, password);
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      const userId = data.session?.user.id;
+      if (userId) {
+        return hydrateProfile(userId);
+      }
+      setProfile(null);
+      return null;
+    },
+    [hydrateProfile],
+  );
 
   const handleLogout = useCallback(async () => {
     await AuthApi.logout();
@@ -94,9 +98,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const refreshProfile = useCallback(async () => {
-    if (!session?.user.id) return;
-    await hydrateProfile(session.user.id);
-  }, [hydrateProfile, session?.user.id]);
+    if (!sessionUserId) return;
+    await hydrateProfile(sessionUserId);
+  }, [hydrateProfile, sessionUserId]);
 
   const value = useMemo(
     () => ({
