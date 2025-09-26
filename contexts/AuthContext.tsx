@@ -59,10 +59,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const register = async (fullName: string, email: string, password: string, role: UserRole) => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const emailRedirectTo = typeof window !== 'undefined'
+        ? `${window.location.origin}/login`
+        : undefined;
+
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo,
           data: {
             full_name: fullName,
             role,
@@ -70,6 +75,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       });
       if (error) throw error;
+      if (!data?.user) {
+        throw new Error('Không thể tạo tài khoản. Vui lòng thử lại sau.');
+      }
     } catch (error) {
       console.error(error);
       throw error;

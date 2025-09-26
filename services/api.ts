@@ -22,10 +22,15 @@ const generateQuestions = async (topic: string, numQuestions: number, questionTy
 export const api = {
   // --- User & Auth ---
   register: async (fullName: string, email: string, pass: string, role: UserRole): Promise<void> => {
-    const { error } = await supabase.auth.signUp({
+    const emailRedirectTo = typeof window !== 'undefined'
+      ? `${window.location.origin}/login`
+      : undefined;
+
+    const { data, error } = await supabase.auth.signUp({
       email,
       password: pass,
       options: {
+        emailRedirectTo,
         data: {
           full_name: fullName,
           role,
@@ -33,6 +38,9 @@ export const api = {
       }
     });
     if (error) throw error;
+    if (!data?.user) {
+      throw new Error('Không thể tạo tài khoản. Vui lòng thử lại sau.');
+    }
   },
   
   login: async (email: string, pass: string): Promise<void> => {
