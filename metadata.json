@@ -1,0 +1,5 @@
+{
+  "name": "Quiz Platform",
+  "description": "A web application for teachers to assign quizzes to students, powered by a Supabase backend and deployed on Cloudflare Pages. Features AI question generation via Cloudflare Functions.",
+  "requestFramePermissions": []
+}

@@ -1,28 +1,25 @@
 {
-  "name": "quiz-app",
-  "version": "0.1.0",
+  "name": "quiz-platform",
   "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "dev": "next dev ",
-    "build": "next build --turbopack",
-    "start": "next start"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/auth-helpers-nextjs": "^0.8.7",
-    "@supabase/ssr": "^0.7.0",
-    "@supabase/supabase-js": "^2.58.0",
-    "cookies-next": "^6.1.0",
-    "next": "15.5.4",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-hook-form": "^7.63.0"
+    "react-dom": "^19.1.1",
+    "react": "^19.1.1",
+    "react-router-dom": "^7.9.2",
+    "@google/genai": "^1.21.0",
+    "@supabase/supabase-js": "2.44.4",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
   }
 }
