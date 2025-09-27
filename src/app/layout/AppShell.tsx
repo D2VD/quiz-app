@@ -9,8 +9,20 @@ export const AppShell: React.FC = () => {
   const isTeacherRoute = location.pathname.startsWith('/teacher');
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
-      <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur">
+    <div className="relative min-h-screen overflow-hidden text-slate-900">
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-sky-50" />
+        <div className="absolute -top-32 -left-24 h-[28rem] w-[28rem] rounded-full bg-gradient-to-br from-sky-300/40 to-indigo-400/40 blur-3xl animate-blob" />
+        <div
+          className="absolute top-1/3 -right-16 h-[24rem] w-[24rem] rounded-full bg-gradient-to-br from-purple-300/35 to-indigo-400/35 blur-3xl animate-blob"
+          style={{ animationDelay: '-6s' }}
+        />
+        <div
+          className="absolute bottom-[-12rem] left-1/3 h-[30rem] w-[30rem] rounded-full bg-gradient-to-br from-cyan-300/30 to-sky-400/30 blur-3xl animate-blob-slow"
+          style={{ animationDelay: '-3s' }}
+        />
+      </div>
+      <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link to="/" className="text-xl font-semibold tracking-tight text-slate-900">
             QuizLab
@@ -51,7 +63,7 @@ export const AppShell: React.FC = () => {
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-6 py-12">
+      <main className="relative z-10 mx-auto max-w-6xl px-6 py-12">
         <Outlet />
       </main>
     </div>
