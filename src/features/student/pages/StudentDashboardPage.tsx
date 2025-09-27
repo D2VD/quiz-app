@@ -98,6 +98,8 @@ export const StudentDashboardPage: React.FC = () => {
     completed: completed.length,
   };
 
+  const studentName = profile?.fullName?.trim();
+
   return (
     <div className="space-y-10">
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">
@@ -115,7 +117,17 @@ export const StudentDashboardPage: React.FC = () => {
               >
                 QuizLab
               </Link>
-              <h1 className="text-3xl font-semibold">Chào mừng trở lại!</h1>
+              <h1 className="text-3xl font-semibold text-white">
+                Chào mừng trở lại
+                {studentName ? (
+                  <>
+                    {' '}
+                    <span className="text-amber-200">{studentName}</span>!
+                  </>
+                ) : (
+                  '!'
+                )}
+              </h1>
               <p className="max-w-2xl text-sm text-indigo-100/90">
                 Theo dõi các bài thi sắp diễn ra, tham gia lớp mới bằng mã mời và xem lại các bài thi đã hoàn thành.
               </p>

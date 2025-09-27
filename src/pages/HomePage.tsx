@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useAuth } from '@/features/auth/context/AuthContext';
@@ -123,16 +123,6 @@ export const HomePage: React.FC = () => {
     }
   ];
 
-  const stats = useMemo(
-    () => [
-      { label: 'Kỳ thi đã tổ chức', value: '4.200+' },
-      { label: 'Thời gian chờ trung bình', value: '02:15"' },
-      { label: 'Học sinh tham gia', value: '18.000+' },
-      { label: 'Tỉ lệ nộp bài đúng giờ', value: '98%' }
-    ],
-    []
-  );
-
   const heroHeading =
     'Phòng thi trực tuyến sắc nét, truyền cảm hứng sáng tạo';
   const heroDescription =
@@ -154,41 +144,31 @@ export const HomePage: React.FC = () => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.2),_transparent_55%)]" />
         </div>
 
-        <div className="flex flex-col gap-12 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-6 lg:max-w-xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/20 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-white/90">
-              QuizLab
-            </span>
-            <div className="space-y-4">
-              <h1 className="text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-                <TypedText text={heroHeading} />
-              </h1>
-              <p className="max-w-2xl text-lg text-white/90">
-                <TypedText text={heroDescription} typingSpeed={45} deleteSpeed={30} pause={2200} />
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-4">
-              <Link
-                to="/login"
-                className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100"
-              >
-                Bắt đầu miễn phí
-              </Link>
-              <a
-                href="#features"
-                className="rounded-full border border-white/50 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/10"
-              >
-                Xem tính năng
-              </a>
-            </div>
+        <div className="mx-auto max-w-3xl space-y-6">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/20 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-white/90">
+            QuizLab
+          </span>
+          <div className="space-y-4">
+            <h1 className="text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
+              <TypedText text={heroHeading} />
+            </h1>
+            <p className="text-lg text-white/90">
+              <TypedText text={heroDescription} typingSpeed={45} deleteSpeed={30} pause={2200} />
+            </p>
           </div>
-
-          <div className="flex w-full max-w-md flex-col gap-4 text-left text-white/90 lg:max-w-lg">
-            {stats.map((stat) => (
-              <p key={stat.label} className="text-lg font-medium">
-                <TypedText text={`${stat.label}: ${stat.value}`} typingSpeed={80} deleteSpeed={45} pause={2000} />
-              </p>
-            ))}
+          <div className="flex flex-wrap gap-4">
+            <Link
+              to="/login"
+              className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100"
+            >
+              Bắt đầu miễn phí
+            </Link>
+            <a
+              href="#features"
+              className="rounded-full border border-white/50 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/10"
+            >
+              Xem tính năng
+            </a>
           </div>
         </div>
       </section>
