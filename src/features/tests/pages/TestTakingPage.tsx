@@ -107,12 +107,12 @@ export const TestTakingPage: React.FC = () => {
 
   return (
     <form className="mx-auto max-w-4xl space-y-8" onSubmit={handleSubmit}>
-      <div className="flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-emerald-50 p-6 text-emerald-700 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white/90 p-6 text-slate-700 shadow-lg shadow-slate-900/5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-emerald-800">{test.title}</h1>
-          <p className="text-sm text-emerald-700/80">Thời gian còn lại</p>
+          <h1 className="text-2xl font-semibold text-slate-900">{test.title}</h1>
+          <p className="text-sm text-slate-500">Thời gian còn lại</p>
         </div>
-        <p className="text-4xl font-bold tracking-tight text-emerald-800">{countdown.formatted}</p>
+        <p className="text-4xl font-semibold tracking-tight text-slate-900">{countdown.formatted}</p>
       </div>
 
       {error && <p className="text-sm text-rose-600">{error}</p>}
@@ -131,7 +131,7 @@ export const TestTakingPage: React.FC = () => {
                     className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm transition ${
                       answers[question.id] === option.id
                         ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
-                        : 'border-slate-200 hover:border-indigo-200 hover:bg-slate-50'
+                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
                     <input
