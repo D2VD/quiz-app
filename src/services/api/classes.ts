@@ -60,6 +60,21 @@ const formatCreateClassError = (error?: PostgrestError | null) => {
   return error.message || 'Không thể tạo lớp học.';
 };
 
+const fetchCreatedClass = async (
+  teacherId: string,
+  inviteCode: string,
+): Promise<ClassSummary | null> => {
+  const { data, error } = await supabase
+    .from('classes')
+    .select('*')
+    .eq('teacher_id', teacherId)
+    .eq('invite_code', inviteCode)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapClass(data) : null;
+};
+
 export async function createClass(name: string, teacherId: string) {
   const MAX_ATTEMPTS = 5;
   let attempt = 0;
@@ -67,8 +82,7 @@ export async function createClass(name: string, teacherId: string) {
   while (attempt < MAX_ATTEMPTS) {
     const inviteCode = generateInviteCode();
 
-    // Thử trả về bản ghi ngay sau khi insert
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('classes')
       .insert([
         {
@@ -76,26 +90,26 @@ export async function createClass(name: string, teacherId: string) {
           teacher_id: teacherId,
           invite_code: inviteCode,
         },
-      ])
-      .select('*')
-      .maybeSingle();
+      ]);
 
-    // Thành công và có data => trả về luôn
-    if (!error && data) {
-      return mapClass(data);
-    }
-
-    // Nếu insert OK nhưng do policy/returning không trả data, thử tra lại
-    if (!error && !data) {
+    if (!error) {
       try {
+        const created = await fetchCreatedClass(teacherId, inviteCode);
+        if (created) {
+          return created;
+        }
+
         const classes = await listClassesForTeacher(teacherId);
-        const created = classes.find(
-          (klass) => klass.inviteCode === inviteCode && klass.name === name
+        const fromList = classes.find(
+          (klass) => klass.inviteCode === inviteCode && klass.name === name,
         );
-        if (created) return created;
+
+        if (fromList) {
+          return fromList;
+        }
 
         throw new Error(
-          'Lớp học đã được tạo nhưng chưa thể hiển thị ngay. Vui lòng tải lại trang để xem lớp mới.'
+          'Lớp học đã được tạo nhưng chưa thể hiển thị ngay. Vui lòng tải lại trang để xem lớp mới.',
         );
       } catch (lookupError) {
         if (isPostgrestError(lookupError)) {
