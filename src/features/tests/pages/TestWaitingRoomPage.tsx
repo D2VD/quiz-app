@@ -30,11 +30,12 @@ export const TestWaitingRoomPage: React.FC = () => {
     load();
   }, [testId]);
 
-  useEffect(() => {
-    if (countdown.isExpired && testId) {
-      navigate(`/test/${testId}/take`, { replace: true });
-    }
-  }, [countdown.isExpired, navigate, testId]);
+  const canStart = Boolean(test && countdown.isExpired);
+
+  const handleStart = () => {
+    if (!canStart || !testId) return;
+    navigate(`/test/${testId}/take`);
+  };
 
   if (error) {
     return <p className="text-sm text-rose-600">{error}</p>;
@@ -57,8 +58,21 @@ export const TestWaitingRoomPage: React.FC = () => {
         <p className="text-sm uppercase tracking-[0.3em] text-indigo-100">Phòng chờ</p>
         <p className="mt-4 text-5xl font-bold">{countdown.formatted}</p>
         <p className="mt-4 text-sm text-indigo-100">
-          Khi đồng hồ về 0, bạn sẽ tự động chuyển sang trang làm bài.
+          {canStart
+            ? 'Đã đến giờ làm bài, hãy nhấn nút bắt đầu để vào đề thi.'
+            : 'Khi đồng hồ về 0, nút Bắt đầu sẽ được kích hoạt để bạn vào làm bài.'}
         </p>
+      </div>
+
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={handleStart}
+          disabled={!canStart}
+          className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3 text-sm font-semibold text-indigo-600 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Bắt đầu làm bài
+        </button>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm">
