@@ -147,3 +147,30 @@ export async function joinClass(inviteCode: string) {
 
   return data;
 }
+
+export async function updateClass(classId: string, updates: { name: string }) {
+  const sanitizedName = updates.name.trim();
+  if (!sanitizedName) {
+    throw new Error('Tên lớp học không được để trống.');
+  }
+
+  const { data, error } = await supabase
+    .from('classes')
+    .update({ name: sanitizedName })
+    .eq('id', classId)
+    .select('*')
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new Error('Không tìm thấy lớp học để cập nhật.');
+  }
+
+  return mapClass(data);
+}
+
+export async function deleteClass(classId: string) {
+  const { error } = await supabase.from('classes').delete().eq('id', classId);
+
+  if (error) throw error;
+}

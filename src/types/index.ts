@@ -14,6 +14,15 @@ export interface ClassSummary {
   createdAt: string;
 }
 
+export interface SubjectSummary {
+  id: string;
+  name: string;
+  description: string | null;
+  teacherId: string;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
 export interface QuestionOption {
   id: string;
   text: string;
