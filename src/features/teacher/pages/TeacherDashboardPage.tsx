@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useAuth } from '@/features/auth/context/AuthContext';
@@ -33,7 +33,8 @@ type SubjectDraft = {
 };
 
 export const TeacherDashboardPage: React.FC = () => {
-  const { profile } = useAuth();
+  const { profile, session } = useAuth();
+  const teacherId = profile?.role === 'teacher' ? profile.id : session?.user?.id ?? null;
   const [classes, setClasses] = useState<ClassSummary[]>([]);
   const [subjects, setSubjects] = useState<SubjectSummary[]>([]);
   const [tests, setTests] = useState<Record<string, TestOverview[]>>({});
@@ -66,21 +67,28 @@ export const TeacherDashboardPage: React.FC = () => {
   const [subjectLoadingId, setSubjectLoadingId] = useState<string | null>(null);
   const [subjectErrors, setSubjectErrors] = useState<Record<string, string | null>>({});
 
-  const refresh = async () => {
-    if (!profile) return;
-    if (!profile.id) {
-      setError('Không xác định được tài khoản giáo viên. Vui lòng đăng nhập lại.');
+  const refresh = useCallback(async () => {
+    if (profile && profile.role !== 'teacher') {
+      setError('Tài khoản của bạn không có quyền truy cập bảng điều khiển giáo viên.');
       setClasses([]);
       setSubjects([]);
       setTests({});
       return;
     }
+
+    if (!teacherId) {
+      setClasses([]);
+      setSubjects([]);
+      setTests({});
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
       const [teacherClasses, teacherSubjects] = await Promise.all([
-        ClassApi.listClassesForTeacher(profile.id),
-        SubjectApi.listSubjectsForTeacher(profile.id),
+        ClassApi.listClassesForTeacher(teacherId),
+        SubjectApi.listSubjectsForTeacher(teacherId),
       ]);
       setClasses(teacherClasses);
       setSubjects(teacherSubjects);
@@ -98,12 +106,11 @@ export const TeacherDashboardPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [profile, teacherId]);
 
   useEffect(() => {
     refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.id]);
+  }, [refresh]);
 
   const totalStudents = useMemo(() => classes.length * 30, [classes.length]);
   const totalTests = useMemo(
