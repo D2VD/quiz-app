@@ -1,3 +1,5 @@
+import type { PostgrestError } from '@supabase/supabase-js';
+
 import { ClassSummary } from '@/types';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -20,20 +22,90 @@ export async function listClassesForTeacher(teacherId: string) {
   return (data ?? []).map(mapClass);
 }
 
-export async function createClass(name: string, teacherId: string) {
-  const inviteCode = Math.random().toString(36).slice(2, 8).toUpperCase();
-  const { data, error } = await supabase
-    .from('classes')
-    .insert({
-      name,
-      teacher_id: teacherId,
-      invite_code: inviteCode,
-    })
-    .select('*')
-    .single();
+const generateInviteCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 
-  if (error) throw error;
-  return mapClass(data);
+const isPostgrestError = (error: unknown): error is PostgrestError =>
+  Boolean(error && typeof error === 'object' && 'code' in error);
+
+const formatCreateClassError = (error?: PostgrestError | null) => {
+  if (!error) {
+    return 'Không thể tạo lớp học.';
+  }
+
+  if (error.code === '23505') {
+    if (error.message?.includes('classes_invite_code_key')) {
+      return 'Không thể sinh mã mời duy nhất cho lớp học. Vui lòng thử lại.';
+    }
+    if (error.message?.includes('classes_teacher_id_name_key')) {
+      return 'Bạn đã có lớp học khác với tên này.';
+    }
+  }
+
+  if (error.code === '23503') {
+    return 'Không tìm thấy tài khoản giáo viên hợp lệ. Vui lòng đăng nhập lại.';
+  }
+
+  if (error.code === '42501') {
+    return 'Tài khoản hiện không có quyền tạo lớp học. Kiểm tra lại policy Supabase cho bảng classes.';
+  }
+
+  if (error.message?.includes('infinite recursion detected in policy')) {
+    return 'Cấu hình bảo mật của lớp học đang gặp lỗi. Vui lòng liên hệ quản trị viên để kiểm tra lại policy Supabase.';
+  }
+
+  return error.message || 'Không thể tạo lớp học.';
+};
+
+export async function createClass(name: string, teacherId: string) {
+  const MAX_ATTEMPTS = 5;
+  let attempt = 0;
+
+  while (attempt < MAX_ATTEMPTS) {
+    const inviteCode = generateInviteCode();
+    const { error } = await supabase
+      .from('classes')
+      .insert([
+        {
+          name,
+          teacher_id: teacherId,
+          invite_code: inviteCode,
+        },
+      ], { returning: 'minimal' });
+
+    if (!error) {
+      try {
+        const classes = await listClassesForTeacher(teacherId);
+        const created = classes.find(
+          (klass) => klass.inviteCode === inviteCode && klass.name === name
+        );
+
+        if (created) {
+          return created;
+        }
+      } catch (lookupError) {
+        if (isPostgrestError(lookupError)) {
+          throw new Error(formatCreateClassError(lookupError));
+        }
+
+        throw lookupError instanceof Error
+          ? lookupError
+          : new Error('Không thể tải lớp học vừa tạo.');
+      }
+
+      throw new Error(
+        'Lớp học đã được tạo nhưng chưa thể hiển thị ngay. Vui lòng tải lại trang để xem lớp mới.'
+      );
+    }
+
+    if (error?.code === '23505' && error.message?.includes('classes_invite_code_key')) {
+      attempt += 1;
+      continue;
+    }
+
+    throw new Error(formatCreateClassError(error ?? null));
+  }
+
+  throw new Error('Không thể tạo lớp học do trùng mã mời. Vui lòng thử lại sau.');
 }
 
 export async function joinClass(inviteCode: string, studentId: string) {
