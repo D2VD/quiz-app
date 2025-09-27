@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useCountdown } from '@/hooks/useCountdown';
-import { TestApi } from '@/services/api';
-import type { TestDetail } from '@/types';
+import { SubmissionApi, TestApi } from '@/services/api';
+import type { SubmissionSummary, TestDetail } from '@/types';
 
 export const TestWaitingRoomPage: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
   const [test, setTest] = useState<TestDetail | null>(null);
+  const [submission, setSubmission] = useState<SubmissionSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const countdown = useCountdown(test?.startTime ?? null, 1000);
@@ -17,12 +18,16 @@ export const TestWaitingRoomPage: React.FC = () => {
     const load = async () => {
       if (!testId) return;
       try {
-        const data = await TestApi.fetchTest(testId);
+        const [data, submissionInfo] = await Promise.all([
+          TestApi.fetchTest(testId),
+          SubmissionApi.getSubmissionForCurrentStudent(testId),
+        ]);
         if (!data) {
           setError('Không tìm thấy bài thi.');
           return;
         }
         setTest(data);
+        setSubmission(submissionInfo);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Không thể tải bài thi.');
       }
@@ -30,7 +35,8 @@ export const TestWaitingRoomPage: React.FC = () => {
     load();
   }, [testId]);
 
-  const canStart = Boolean(test && countdown.isExpired);
+  const hasSubmitted = Boolean(submission);
+  const canStart = Boolean(test && countdown.isExpired && !hasSubmitted);
 
   const handleStart = () => {
     if (!canStart || !testId) return;
@@ -58,9 +64,11 @@ export const TestWaitingRoomPage: React.FC = () => {
         <p className="text-sm uppercase tracking-[0.3em] text-indigo-100">Phòng chờ</p>
         <p className="mt-4 text-5xl font-bold">{countdown.formatted}</p>
         <p className="mt-4 text-sm text-indigo-100">
-          {canStart
-            ? 'Đã đến giờ làm bài, hãy nhấn nút bắt đầu để vào đề thi.'
-            : 'Khi đồng hồ về 0, nút Bắt đầu sẽ được kích hoạt để bạn vào làm bài.'}
+          {hasSubmitted
+            ? 'Bạn đã nộp bài thi này. Vui lòng quay lại bảng điều khiển để xem thông tin chi tiết.'
+            : canStart
+              ? 'Đã đến giờ làm bài, hãy nhấn nút bắt đầu để vào đề thi.'
+              : 'Khi đồng hồ về 0, nút Bắt đầu sẽ được kích hoạt để bạn vào làm bài.'}
         </p>
       </div>
 
@@ -74,6 +82,18 @@ export const TestWaitingRoomPage: React.FC = () => {
           Bắt đầu làm bài
         </button>
       </div>
+
+      {hasSubmitted && submission && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-900">Bài nộp của bạn</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Đã nộp lúc {new Date(submission.submittedAt).toLocaleString('vi-VN')}.
+          </p>
+          <p className="mt-1 text-sm text-slate-600">
+            Điểm: {submission.score ?? 'đang chấm'}
+          </p>
+        </div>
+      )}
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">Hướng dẫn</h2>

@@ -55,4 +55,9 @@ export interface SubmissionPayload {
   answers: SubmissionAnswer[];
 }
 
+export interface SubmissionSummary {
+  submittedAt: string;
+  score: number | null;
+}
+
 export type RegistrationOutcome = 'created' | 'resent';
