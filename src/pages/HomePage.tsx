@@ -1,7 +1,71 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { StudentDashboardPage } from '@/features/student/pages/StudentDashboardPage';
+
+type TypingOptions = {
+  typingSpeed?: number;
+  deleteSpeed?: number;
+  pause?: number;
+  loop?: boolean;
+};
+
+const useTypingEffect = (text: string, options: TypingOptions = {}) => {
+  const { typingSpeed = 70, deleteSpeed = 40, pause = 1600, loop = true } = options;
+  const [displayed, setDisplayed] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const fullText = text;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+
+    if (!isDeleting && displayed.length < fullText.length) {
+      timeout = setTimeout(() => {
+        setDisplayed(fullText.slice(0, displayed.length + 1));
+      }, typingSpeed);
+    } else if (!isDeleting && displayed.length === fullText.length) {
+      timeout = setTimeout(() => {
+        if (loop) {
+          setIsDeleting(true);
+        }
+      }, pause);
+    } else if (isDeleting && displayed.length > 0) {
+      timeout = setTimeout(() => {
+        setDisplayed(fullText.slice(0, displayed.length - 1));
+      }, deleteSpeed);
+    } else if (isDeleting && displayed.length === 0) {
+      setIsDeleting(false);
+    }
+
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, [deleteSpeed, displayed, isDeleting, loop, pause, text, typingSpeed]);
+
+  return displayed;
+};
+
+type TypedTextProps = TypingOptions & {
+  text: string;
+  className?: string;
+};
+
+const TypedText = ({ text, className, ...options }: TypedTextProps) => {
+  const typed = useTypingEffect(text, options);
+
+  return (
+    <span className={`relative inline-flex items-center ${className ?? ''}`}>
+      <span>{typed}</span>
+      <span
+        aria-hidden="true"
+        className="ml-1 inline-block h-[1em] w-[2px] animate-pulse bg-current align-middle"
+      />
+    </span>
+  );
+};
 
 export const HomePage: React.FC = () => {
   const { session, profile } = useAuth();
@@ -59,62 +123,71 @@ export const HomePage: React.FC = () => {
     }
   ];
 
+  const stats = useMemo(
+    () => [
+      { label: 'Kỳ thi đã tổ chức', value: '4.200+' },
+      { label: 'Thời gian chờ trung bình', value: '02:15"' },
+      { label: 'Học sinh tham gia', value: '18.000+' },
+      { label: 'Tỉ lệ nộp bài đúng giờ', value: '98%' }
+    ],
+    []
+  );
+
+  const heroHeading =
+    'Phòng thi trực tuyến sắc nét, truyền cảm hứng sáng tạo';
+  const heroDescription =
+    'Tạo không gian thi hiện đại với phòng chờ đếm ngược, đề linh hoạt và báo cáo thời gian thực. QuizLab giúp giáo viên tổ chức kỳ thi hiệu quả trong khi học sinh tập trung vào trải nghiệm làm bài tối giản.';
+
   return (
     <div className="mx-auto max-w-6xl space-y-24">
-      <section className="relative overflow-hidden rounded-4xl bg-slate-950 px-6 py-20 text-left text-slate-100 sm:px-12">
+      <section className="relative overflow-hidden rounded-4xl bg-gradient-to-br from-indigo-700 via-purple-600 to-sky-500 px-6 py-20 text-left text-slate-100 shadow-2xl sm:px-12">
         <div className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute -top-24 -left-32 h-80 w-80 rounded-full bg-gradient-to-br from-sky-400/60 to-indigo-500/60 blur-3xl animate-blob" />
+          <div className="absolute -top-24 -left-32 h-80 w-80 rounded-full bg-white/20 blur-3xl animate-blob" />
           <div
-            className="absolute top-1/3 -right-20 h-72 w-72 rounded-full bg-gradient-to-br from-indigo-400/50 to-purple-500/50 blur-3xl animate-blob"
+            className="absolute top-1/3 -right-20 h-72 w-72 rounded-full bg-white/20 blur-3xl animate-blob"
             style={{ animationDelay: '-6s' }}
           />
           <div
-            className="absolute bottom-0 left-1/4 h-96 w-96 rounded-full bg-gradient-to-br from-cyan-400/40 to-sky-500/50 blur-3xl animate-blob-slow"
+            className="absolute bottom-0 left-1/4 h-96 w-96 rounded-full bg-white/10 blur-3xl animate-blob-slow"
             style={{ animationDelay: '-3s' }}
           />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),_transparent_55%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.2),_transparent_55%)]" />
         </div>
 
         <div className="flex flex-col gap-12 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-6 lg:max-w-xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-slate-200">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/20 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-white/90">
               QuizLab
             </span>
             <div className="space-y-4">
               <h1 className="text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-                Phòng thi trực tuyến sắc nét, truyền cảm hứng sáng tạo
+                <TypedText text={heroHeading} />
               </h1>
-              <p className="max-w-2xl text-lg text-slate-200/90">
-                Tạo không gian thi hiện đại với phòng chờ đếm ngược, đề linh hoạt và báo cáo thời gian thực. QuizLab giúp giáo viên tổ chức kỳ thi hiệu quả trong khi học sinh tập trung vào trải nghiệm làm bài tối giản.
+              <p className="max-w-2xl text-lg text-white/90">
+                <TypedText text={heroDescription} typingSpeed={45} deleteSpeed={30} pause={2200} />
               </p>
             </div>
             <div className="flex flex-wrap gap-4">
               <Link
                 to="/login"
-                className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
+                className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100"
               >
                 Bắt đầu miễn phí
               </Link>
               <a
                 href="#features"
-                className="rounded-full border border-white/40 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/10"
+                className="rounded-full border border-white/50 px-6 py-3 text-sm font-semibold text-white transition hover:border-white hover:bg-white/10"
               >
                 Xem tính năng
               </a>
             </div>
           </div>
 
-          <div className="grid w-full max-w-md gap-4 rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-slate-100 backdrop-blur md:grid-cols-2 lg:max-w-lg">
-            {[
-              { label: 'Kỳ thi đã tổ chức', value: '4.200+' },
-              { label: 'Thời gian chờ trung bình', value: '02:15"' },
-              { label: 'Học sinh tham gia', value: '18.000+' },
-              { label: 'Tỉ lệ nộp bài đúng giờ', value: '98%' }
-            ].map((stat) => (
-              <div key={stat.label} className="rounded-2xl border border-white/5 bg-white/10 p-4">
-                <p className="text-xs uppercase tracking-widest text-slate-200/80">{stat.label}</p>
-                <p className="mt-2 text-2xl font-semibold text-white">{stat.value}</p>
-              </div>
+          <div className="flex w-full max-w-md flex-col gap-4 text-left text-white/90 lg:max-w-lg">
+            {stats.map((stat) => (
+              <p key={stat.label} className="text-lg font-medium">
+                <TypedText text={`${stat.label}: ${stat.value}`} typingSpeed={80} deleteSpeed={45} pause={2000} />
+              </p>
             ))}
           </div>
         </div>
