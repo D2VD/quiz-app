@@ -21,6 +21,16 @@ const mapTestDetail = (row: any): TestDetail => ({
   questions: (row.questions ?? []).map(mapQuestion),
 });
 
+const mapTestOverview = (row: any): TestOverview => ({
+  id: row.id,
+  title: row.title,
+  classId: row.class_id,
+  startTime: row.start_time,
+  durationMinutes: row.duration,
+  createdAt: row.created_at,
+  status: 'upcoming',
+});
+
 export async function fetchTest(testId: string): Promise<TestDetail | null> {
   const { data, error } = await supabase
     .from('tests')
@@ -81,20 +91,12 @@ export async function listTestsForStudent(studentId: string): Promise<TestOvervi
 export async function listTestsForClass(classId: string) {
   const { data, error } = await supabase
     .from('tests')
-    .select('id, title, start_time, duration, created_at')
+    .select('id, title, start_time, duration, created_at, class_id')
     .eq('class_id', classId)
     .order('start_time', { ascending: true });
 
   if (error) throw error;
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    title: row.title,
-    classId,
-    startTime: row.start_time,
-    durationMinutes: row.duration,
-    createdAt: row.created_at,
-    status: 'upcoming' as const,
-  }));
+  return (data ?? []).map((row) => mapTestOverview(row));
 }
 
 interface CreateTestPayload {
@@ -148,3 +150,47 @@ export async function createTest(payload: CreateTestPayload) {
 }
 
 // --- KẾT THÚC PHẦN CHỈNH SỬA ---
+
+interface UpdateTestPayload {
+  title?: string;
+  startTime?: string;
+  durationMinutes?: number;
+}
+
+export async function updateTest(testId: string, updates: UpdateTestPayload) {
+  const payload: Record<string, unknown> = {};
+
+  if (typeof updates.title !== 'undefined') {
+    payload.title = updates.title.trim();
+  }
+  if (typeof updates.startTime !== 'undefined') {
+    payload.start_time = updates.startTime;
+  }
+  if (typeof updates.durationMinutes !== 'undefined') {
+    payload.duration = updates.durationMinutes;
+  }
+
+  if (Object.keys(payload).length === 0) {
+    throw new Error('Không có thay đổi nào để cập nhật.');
+  }
+
+  const { data, error } = await supabase
+    .from('tests')
+    .update(payload)
+    .eq('id', testId)
+    .select('id, title, class_id, start_time, duration, created_at')
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new Error('Không tìm thấy bài thi để cập nhật.');
+  }
+
+  return mapTestOverview(data);
+}
+
+export async function deleteTest(testId: string) {
+  const { error } = await supabase.from('tests').delete().eq('id', testId);
+
+  if (error) throw error;
+}
