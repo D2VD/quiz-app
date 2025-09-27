@@ -68,6 +68,13 @@ export const TeacherDashboardPage: React.FC = () => {
 
   const refresh = async () => {
     if (!profile) return;
+    if (!profile.id) {
+      setError('Không xác định được tài khoản giáo viên. Vui lòng đăng nhập lại.');
+      setClasses([]);
+      setSubjects([]);
+      setTests({});
+      return;
+    }
     setLoading(true);
     setError(null);
     try {

@@ -28,6 +28,11 @@ export const StudentDashboardPage: React.FC = () => {
 
   const refresh = async () => {
     if (!profile) return;
+    if (!profile.id) {
+      setError('Không xác định được tài khoản học sinh. Vui lòng đăng nhập lại.');
+      setTests([]);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {

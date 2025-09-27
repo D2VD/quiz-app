@@ -43,6 +43,10 @@ export async function fetchTest(testId: string): Promise<TestDetail | null> {
 }
 
 export async function listTestsForStudent(studentId: string): Promise<TestOverview[]> {
+  if (!studentId) {
+    throw new Error('Không xác định được tài khoản học sinh. Vui lòng đăng nhập lại.');
+  }
+
   const { data: enrollments, error: enrollmentError } = await supabase
     .from('enrollments')
     .select('class_id')
