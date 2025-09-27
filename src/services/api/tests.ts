@@ -1,6 +1,8 @@
 import { supabase } from '@/lib/supabaseClient';
 import { TestDetail, TestOverview, TestQuestion } from '@/types';
 
+// --- CÁC HÀM VÀ KIỂU DỮ LIỆU KHÔNG THAY ĐỔI ---
+
 const mapQuestion = (row: any): TestQuestion => ({
   id: row.id,
   text: row.text,
@@ -103,35 +105,46 @@ interface CreateTestPayload {
   questions: Omit<TestQuestion, 'id'>[];
 }
 
+// --- BẮT ĐẦU PHẦN CHỈNH SỬA ---
+
 export async function createTest(payload: CreateTestPayload) {
   const { questions, classId, startTime, durationMinutes, title } = payload;
-  const { data: test, error: testError } = await supabase
-    .from('tests')
-    .insert({
-      title,
-      class_id: classId,
-      start_time: startTime,
-      duration: durationMinutes,
-    })
-    .select('*')
-    .single();
 
-  if (testError) throw testError;
+  // Chuyển đổi mảng câu hỏi từ camelCase (frontend) sang snake_case (database)
+  // để khớp với định dạng JSON mà hàm RPC mong đợi.
+  const formattedQuestionsForRpc = questions.map((q) => ({
+    text: q.text,
+    type: q.type,
+    options: q.options ?? null,
+    correct_option_id: q.correctOptionId ?? null,
+  }));
 
-  if (questions.length > 0) {
-    const formattedQuestions = questions.map((question) => ({
-      ...question,
-      test_id: test.id,
-      options: question.options ?? null,
-      correct_option_id: question.correctOptionId ?? null,
-    }));
+  // Chuẩn bị các tham số cho lệnh gọi RPC.
+  // Tên các key phải khớp chính xác với tên tham số trong hàm SQL.
+  const rpcParams = {
+    class_uuid: classId,
+    test_title: title,
+    test_start_time: startTime,
+    test_duration: durationMinutes,
+    questions_data: formattedQuestionsForRpc,
+  };
 
-    const { error: questionError } = await supabase
-      .from('questions')
-      .insert(formattedQuestions);
+  // Gọi hàm RPC duy nhất để thực hiện toàn bộ thao tác trong một giao dịch.
+  // "Tất cả hoặc không có gì": Hoặc tạo thành công cả bài thi và câu hỏi,
+  // hoặc không tạo gì cả nếu có lỗi.
+  const { data: newTestId, error } = await supabase.rpc(
+    'create_test_with_questions',
+    rpcParams
+  );
 
-    if (questionError) throw questionError;
+  if (error) {
+    console.error('Lỗi RPC khi tạo đề thi và câu hỏi:', error);
+    throw new Error(error.message || 'Không thể tạo đề thi do lỗi máy chủ.');
   }
 
-  return test.id as string;
+  // Hàm RPC trả về ID của bài thi mới khi thành công.
+  // Trả về ID này, khớp với hành vi của hàm gốc.
+  return newTestId as string;
 }
+
+// --- KẾT THÚC PHẦN CHỈNH SỬA ---

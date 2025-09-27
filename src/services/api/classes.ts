@@ -134,26 +134,16 @@ export async function createClass(name: string, teacherId: string) {
   throw new Error('Không thể tạo lớp học do trùng mã mời. Vui lòng thử lại sau.');
 }
 
-export async function joinClass(inviteCode: string, studentId: string) {
-  const code = inviteCode.trim().toUpperCase();
-  const { data: klass, error: findError } = await supabase
-    .from('classes')
-    .select('id')
-    .eq('invite_code', code)
-    .maybeSingle();
+export async function joinClass(inviteCode: string) {
+  const { data, error } = await supabase.rpc('join_class_with_invite_code', {
+    invite_code_to_join: inviteCode,
+  });
 
-  if (findError || !klass) {
-    throw new Error('Mã mời không hợp lệ.');
+  if (error) {
+    console.error('Lỗi khi tham gia lớp học:', error);
+    // Ném lỗi với thông báo từ Postgres để UI có thể hiển thị
+    throw new Error(error.message);
   }
 
-  const { error: insertError } = await supabase
-    .from('enrollments')
-    .insert({ class_id: klass.id, student_id: studentId });
-
-  if (insertError) {
-    if (insertError.code === '23505') {
-      throw new Error('Bạn đã tham gia lớp học này.');
-    }
-    throw insertError;
-  }
+  return data;
 }
