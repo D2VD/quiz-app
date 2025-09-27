@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useAuth } from '@/features/auth/context/AuthContext';
@@ -55,14 +55,50 @@ type TypedTextProps = TypingOptions & {
 
 const TypedText = ({ text, className, ...options }: TypedTextProps) => {
   const typed = useTypingEffect(text, options);
+  const measureRef = useRef<HTMLSpanElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number>();
+
+  useLayoutEffect(() => {
+    if (measureRef.current) {
+      setContainerWidth(measureRef.current.offsetWidth);
+    }
+  }, [text]);
+
+  useEffect(() => {
+    if (!measureRef.current) {
+      return;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      if (entries[0]) {
+        setContainerWidth(entries[0].contentRect.width);
+      }
+    });
+
+    observer.observe(measureRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   return (
-    <span className={`relative inline-flex items-center ${className ?? ''}`}>
+    <span
+      className={`relative inline-flex items-center ${className ?? ''}`}
+      style={containerWidth ? { minWidth: `${containerWidth}px` } : undefined}
+    >
       <span>{typed}</span>
       <span
         aria-hidden="true"
         className="ml-1 inline-block h-[1em] w-[2px] animate-pulse bg-current align-middle"
       />
+      <span
+        ref={measureRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 whitespace-pre opacity-0"
+      >
+        {text}
+      </span>
     </span>
   );
 };
