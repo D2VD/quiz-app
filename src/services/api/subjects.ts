@@ -11,6 +11,10 @@ const mapSubject = (row: any): SubjectSummary => ({
 });
 
 export async function listSubjectsForTeacher(teacherId: string) {
+  if (!teacherId) {
+    throw new Error('Không xác định được tài khoản giáo viên. Vui lòng đăng nhập lại.');
+  }
+
   const { data, error } = await supabase
     .from('subjects')
     .select('*')

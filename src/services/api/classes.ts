@@ -12,6 +12,10 @@ const mapClass = (row: any): ClassSummary => ({
 });
 
 export async function listClassesForTeacher(teacherId: string) {
+  if (!teacherId) {
+    throw new Error('Không xác định được tài khoản giáo viên. Vui lòng đăng nhập lại.');
+  }
+
   const { data, error } = await supabase
     .from('classes')
     .select('*')
