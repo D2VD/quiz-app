@@ -12,23 +12,53 @@ export const TestTakingPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [checkingSubmission, setCheckingSubmission] = useState(true);
 
   useEffect(() => {
+    let active = true;
     const load = async () => {
-      if (!testId) return;
+      if (!testId) {
+        if (active) {
+          setCheckingSubmission(false);
+        }
+        return;
+      }
       try {
-        const data = await TestApi.fetchTest(testId);
-        if (!data) {
-          setError('Không tìm thấy bài thi.');
+        const existingSubmission = await SubmissionApi.getSubmissionForCurrentStudent(testId);
+        if (existingSubmission) {
+          if (active) {
+            navigate(`/test/${testId}`, { replace: true });
+          }
           return;
         }
-        setTest(data);
+
+        const data = await TestApi.fetchTest(testId);
+        if (!data) {
+          if (active) {
+            setError('Không tìm thấy bài thi.');
+          }
+          return;
+        }
+        if (active) {
+          setTest(data);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Không thể tải bài thi.');
+        if (active) {
+          setError(err instanceof Error ? err.message : 'Không thể tải bài thi.');
+        }
+      } finally {
+        if (active) {
+          setCheckingSubmission(false);
+        }
       }
     };
+
     load();
-  }, [testId]);
+
+    return () => {
+      active = false;
+    };
+  }, [navigate, testId]);
 
   const endTime = useMemo(() => {
     if (!test) return null;
@@ -66,6 +96,10 @@ export const TestTakingPage: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [countdown.isExpired]);
+
+  if (checkingSubmission) {
+    return <p className="text-sm text-slate-500">Đang kiểm tra trạng thái bài thi...</p>;
+  }
 
   if (!test) {
     return <p className="text-sm text-slate-500">Đang chuẩn bị đề thi...</p>;
